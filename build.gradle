@@ -1,0 +1,161 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+		maven {
+            name = "Modmuss50"
+            url = "http://maven.modmuss50.me/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+    maven {
+        name = "Modmuss50"
+        url = "http://maven.modmuss50.me/"
+    }
+   
+    maven {
+        url 'http://maven.epoxide.xyz'
+    }
+}
+
+
+version = "1.0.0"
+
+def ENV = System.getenv()
+if (ENV.BUILD_NUMBER) {
+    version = version + "." + "${System.getenv().BUILD_NUMBER}"
+}
+
+minecraft {
+    version = "1.9.4-12.17.0.1950"
+    mappings = "snapshot_20160518"
+    replace "@MODVERSION@", project.version
+  //  makeObfSourceJar = false
+    useDepAts = true
+    runDir = "run"
+}
+
+group = 'Tesla-Flux'
+
+dependencies {
+    compile 'RebornCore:RebornCore-1.9.4:+:dev'
+    compile "net.darkhax.tesla:Tesla:1.9.4-1.1.0.24:deobf"
+}
+
+
+processResources
+        {
+            // this will ensure that this task is redone when the versions change.
+            inputs.property "version", project.version
+            inputs.property "mcversion", project.minecraft.version
+
+            // replace stuff in mcmod.info, nothing else
+            from(sourceSets.main.resources.srcDirs) {
+                include 'mcmod.info'
+
+                // replace version and mcversion
+                expand 'version':project.version, 'mcversion':project.minecraft.version
+            }
+
+            // copy everything else, thats not the mcmod.info
+            from(sourceSets.main.resources.srcDirs) {
+                exclude 'mcmod.info'
+            }
+        }
+
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    exclude "**/*.psd"
+    classifier = 'dev'
+}
+
+
+jar {
+    exclude "**/*.psd"
+    classifier = 'universal'
+}
+
+apiJar.mustRunAfter deobfJar
+
+artifacts {
+    archives deobfJar
+}
+
+build.dependsOn deobfJar
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            //This is used when the build is done on a slave node
+		if (project.hasProperty('mavenPass'))
+        {
+			println 'Uploading to remote Maven Repo'
+            repository(url: "http://mavenupload.modmuss50.me/") {
+                authentication(userName: "buildslave", password: project.getProperty('mavenPass'))
+            }
+        }
+        else
+        { 
+			//this is when the build is executed on the master node
+			println 'Uploading to local Maven Repo'
+           repository(url: "file:///var/www/maven/")
+        }
+            pom {
+                groupId = "Tesla-Flux"
+                version = project.version
+                artifactId = project.archivesBaseName
+                project {
+                    name project.archivesBaseName
+                    packaging 'jar'
+                    description 'Tesla-Flux'
+                    url 'https://github.com/modmuss50/Tesla-Flux'
+                    scm {
+                        url 'https://github.com/modmuss50/Tesla-Flux'
+                        connection 'scm:git:git@github.com:modmuss50/Tesla-Flux.git'
+                        developerConnection 'scm:git:git@github.com:modmuss50/Tesla-Flux.git'
+                    }
+                    issueManagement {
+                        system 'github'
+                        url 'https://github.com/modmuss50/Tesla-Flux/issues'
+                    }
+                    licenses {
+                        license {
+                            name 'License'
+                            url 'https://raw.githubusercontent.com/modmuss50/Tesla-Flux/master/LICENSE.md'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'modmuss50'
+                            name 'modmuss50'
+                            roles { role 'developer' }
+                        }
+                      
+                    }
+                }
+            }
+        }
+    }
+}

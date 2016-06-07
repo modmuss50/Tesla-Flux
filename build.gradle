@@ -96,8 +96,6 @@ jar {
     classifier = 'universal'
 }
 
-apiJar.mustRunAfter deobfJar
-
 artifacts {
     archives deobfJar
 }

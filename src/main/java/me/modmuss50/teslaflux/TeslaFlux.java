@@ -2,6 +2,7 @@ package me.modmuss50.teslaflux;
 
 import cofh.api.energy.IEnergyConnection;
 import cofh.api.energy.IEnergyStorage;
+import net.darkhax.tesla.capability.TeslaCapabilities;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,6 +27,9 @@ public class TeslaFlux {
     public void onTELoad(AttachCapabilitiesEvent.TileEntity event) {
         TileEntity tile = event.getTileEntity();
         if (tile instanceof IEnergyConnection || tile instanceof IEnergyStorage) {
+            if(tile.hasCapability(TeslaCapabilities.CAPABILITY_CONSUMER, null) || !tile.hasCapability(TeslaCapabilities.CAPABILITY_HOLDER, null) || !tile.hasCapability(TeslaCapabilities.CAPABILITY_PRODUCER, null)){
+                return;
+            }
             event.addCapability(new ResourceLocation("teslaflux:tesla"), new TeslaCapabilityProvider(tile));
         }
     }

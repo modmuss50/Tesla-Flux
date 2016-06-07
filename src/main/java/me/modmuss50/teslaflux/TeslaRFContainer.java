@@ -1,6 +1,8 @@
 package me.modmuss50.teslaflux;
 
 import cofh.api.energy.IEnergyHandler;
+import cofh.api.energy.IEnergyProvider;
+import cofh.api.energy.IEnergyReceiver;
 import net.darkhax.tesla.api.ITeslaConsumer;
 import net.darkhax.tesla.api.ITeslaHolder;
 import net.darkhax.tesla.api.ITeslaProducer;
@@ -25,6 +27,9 @@ public class TeslaRFContainer implements ITeslaConsumer, ITeslaHolder, ITeslaPro
 
     @Override //Adding to the RF tile
     public long givePower(long power, boolean simulated) {
+        if(entity instanceof IEnergyReceiver){
+            return ((IEnergyReceiver) entity).receiveEnergy(dir, (int) power, simulated);
+        }
         return 0;
     }
 
@@ -46,6 +51,9 @@ public class TeslaRFContainer implements ITeslaConsumer, ITeslaHolder, ITeslaPro
 
     @Override //Removing from the RF tile
     public long takePower(long power, boolean simulated) {
+        if(entity instanceof IEnergyProvider){
+            return ((IEnergyProvider) entity).extractEnergy(dir, (int) power, simulated);
+        }
         return 0;
     }
 }
